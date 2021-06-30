@@ -55,29 +55,6 @@ namespace DbFirstTest
             }
         }
 
-        public List<int> ParentNodesId()  // Возвращает список id родительских компонентов
-        {
-            var relationid = context.Relations.Select(relation => relation.ChildId == 3).ToList();
-
-            List<Component> parentRelations = context.Relations.SelectMany(relation => context.Component.Where(p => relation.ChildId == p.Id)).Distinct().ToList(); // все элементы, кроме родительских
-
-            List<int> idOfParentComponents = new List<int>();
-
-            foreach (var item in parentRelations)
-                idOfParentComponents.Add(item.Id);
-
-            List<int> allComponents = new List<int>();
-
-            foreach (var component in context.Component.ToList())
-                allComponents.Add(component.Id);
-
-            List<int> result = allComponents.Except(idOfParentComponents).ToList();
-
-            result.Sort();
-
-            return result;
-        }
-
         public TreeNode[] CreateChildTreeNode(int id) // Метод добавления дочерних узлов id - id родительского компонента
         {
             List<Relations> child = context.Relations.Where(x => x.ParentId == id).ToList();
@@ -91,7 +68,7 @@ namespace DbFirstTest
                 var querry = context.Relations.Where(x => x.ParentId == component.Id).FirstOrDefault(); // проверка есть ли вложенный элемент
                 if (querry != null) // Если есть вложенный элемент
                 {
-                    TreeNode parentNode = new TreeNode($"{component.Name} ({context.Relations.Where(x => x.ChildId == component.Id).FirstOrDefault().QuantityOfComponents} шт)");
+                    TreeNode parentNode = new TreeNode($"{component.Name} ({context.Relations.Where(x => (x.ChildId == component.Id) && (x.ParentId == id)).FirstOrDefault().QuantityOfComponents} шт)");
                     parentNode.Nodes.AddRange(CreateChildTreeNode(component.Id));
                     nodes[i] = parentNode;
                 }
@@ -104,7 +81,7 @@ namespace DbFirstTest
 
         public void DisplayTreeView() // Метод отображения treeview
         {
-            List<int> idOfMainNodes = ParentNodesId();
+            var idOfMainNodes = context.Relations.Where(x => x.ParentId == null).Select(x => x.ChildId).ToList();
 
             List<Component> allParentNodes = context.Component.Where(x => idOfMainNodes.Contains(x.Id)).ToList();
 
@@ -127,24 +104,23 @@ namespace DbFirstTest
             NewParentComponentCreate_form.ShowDialog();
 
             if (NewParentComponentCreate_form.Title != null)
-            {
-                Component component = new Component();
-                component.Name = NewParentComponentCreate_form.Title;
-                context.Component.Add(component);
-                context.SaveChanges();
-
-                treeView.Nodes.Add(component.Name);
-            }
+                treeView.Nodes.Add(NewParentComponentCreate_form.Title);
+            
         }
 
         private void NewChildComponent_ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            NewComponentCreate newComponentCreate_form = new NewComponentCreate(context, SelectedNode);
-            newComponentCreate_form.ShowDialog();
+            if (SelectedNode != null)
+            {
+                NewComponentCreate newComponentCreate_form = new NewComponentCreate(context, SelectedNode);
+                newComponentCreate_form.ShowDialog();
 
-            treeView.Nodes.Clear();
-            DisplayTreeView();
-            treeView.ExpandAll();
+                treeView.Nodes.Clear();
+                DisplayTreeView();
+                treeView.ExpandAll();
+            }
+            else
+                MessageBox.Show("Вложенный компонент можно создать только в компоненте верхнего уровня", "Ошибка", MessageBoxButtons.OK);
         }
 
         private void RenameComponent_ToolStripMenuItem_Click(object sender, EventArgs e)

@@ -16,8 +16,8 @@ namespace DbFirstTest.Model
     {
         public int Id { get; set; }
         public int ChildId { get; set; }
-        public int ParentId { get; set; }
-        public byte QuantityOfComponents { get; set; }
+        public Nullable<int> ParentId { get; set; }
+        public Nullable<byte> QuantityOfComponents { get; set; }
     
         public virtual Component Component { get; set; }
     }

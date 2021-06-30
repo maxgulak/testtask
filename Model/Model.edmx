@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="Хранилище Model" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="Хранилище Model" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Component">
           <Key>
             <PropertyRef Name="Id" />
@@ -18,11 +18,11 @@
           </Key>
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="ChildId" Type="int" Nullable="false" />
-          <Property Name="ParentId" Type="int" Nullable="false" />
-          <Property Name="QuantityOfComponents" Type="tinyint" Nullable="false" />
+          <Property Name="ParentId" Type="int" />
+          <Property Name="QuantityOfComponents" Type="tinyint" />
         </EntityType>
         <Association Name="FK_Relations_Component">
-          <End Role="Component" Type="Self.Component" Multiplicity="1" />
+          <End Role="Component" Type="Self.Component" Multiplicity="0..1" />
           <End Role="Relations" Type="Self.Relations" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Component">
@@ -41,8 +41,7 @@
             <End Role="Relations" EntitySet="Relations" />
           </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="Model" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -60,12 +59,12 @@
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="ChildId" Type="Int32" Nullable="false" />
-          <Property Name="ParentId" Type="Int32" Nullable="false" />
-          <Property Name="QuantityOfComponents" Type="Byte" Nullable="false" />
+          <Property Name="ParentId" Type="Int32" />
+          <Property Name="QuantityOfComponents" Type="Byte" />
           <NavigationProperty Name="Component" Relationship="Self.FK_Relations_Component" FromRole="Relations" ToRole="Component" />
         </EntityType>
         <Association Name="FK_Relations_Component">
-          <End Role="Component" Type="Self.Component" Multiplicity="1" />
+          <End Role="Component" Type="Self.Component" Multiplicity="0..1" />
           <End Role="Relations" Type="Self.Relations" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Component">

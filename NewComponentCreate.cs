@@ -79,26 +79,30 @@ namespace DbFirstTest
                     }
                     else // Если компонент с таким именем есть
                     { // Задаём только отношение
-
-                        var checkId = _context.Component.Where(x => x.Name == Title).FirstOrDefault().Id; // Проверяем ссылается ли добавляемый элемент на родительский
-
-                        bool flag = false;
-
-                        flag = IsListRecursion(_context.Relations.Where(x => x.ParentId == checkId).ToList(), flag);
-
-                        if (flag == false)
+                        if (_context.Relations.Where(x => x.ParentId == querry.Id).FirstOrDefault() != null) // Проверка на существование этого комнонента
                         {
-                            Relations relation = new Relations();
-                            relation.ChildId = querry.Id;
-                            relation.ParentId = _context.Component.Where(x => x.Name == _node).FirstOrDefault().Id;
-                            relation.QuantityOfComponents = Quantity;
-                            _context.Relations.Add(relation);
+                            var checkId = _context.Component.Where(x => x.Name == Title).FirstOrDefault().Id; // Проверяем ссылается ли добавляемый элемент на родительский
 
-                            _context.SaveChanges();
-                            Close();
+                            bool flag = false;
+
+                            flag = IsListRecursion(_context.Relations.Where(x => x.ParentId == checkId).ToList(), flag);
+
+                            if (flag == false)
+                            {
+                                Relations relation = new Relations();
+                                relation.ChildId = querry.Id;
+                                relation.ParentId = _context.Component.Where(x => x.Name == _node).FirstOrDefault().Id;
+                                relation.QuantityOfComponents = Quantity;
+                                _context.Relations.Add(relation);
+
+                                _context.SaveChanges();
+                                Close();
+                            }
+                            else
+                                MessageBox.Show("Рекурсивное вложение компонентов не допускается", "Ошибка", MessageBoxButtons.OK);
                         }
                         else
-                            MessageBox.Show("Рекурсивное вложение компонентов не допускается", "Ошибка", MessageBoxButtons.OK);
+                            MessageBox.Show("У данного компонента уже существует вложенный компонент с таким именем", "Ошибка", MessageBoxButtons.OK);
                     }
                 }
                 else
