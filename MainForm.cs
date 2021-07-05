@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Windows.Forms;
 using Word = Microsoft.Office.Interop.Word;
@@ -30,29 +31,34 @@ namespace DbFirstTest
 
         private void DeleteComponents(string name) // Удаление компонентов
         {
-            var deleteComponent = context.Component.Where(x => x.Name == name).FirstOrDefault();
+            if (SelectedNode != null)
+            {
+                var deleteComponent = context.Component.Where(x => x.Name == name).FirstOrDefault();
 
-            var includeComponent = context.Relations.Where(x => x.ChildId == deleteComponent.Id).ToList();
+                var includeComponent = context.Relations.Where(x => x.ChildId == deleteComponent.Id).ToList();
 
-            if (includeComponent.Count > 1) // Есть ли данный компонент в составе другого компонента
-            {// есть
-                context.Relations.Remove(includeComponent.Where(x => x.ParentId == context.Relations.Where(c => c.ChildId == deleteComponent.Id).FirstOrDefault().ParentId).FirstOrDefault());
+                if (includeComponent.Count > 1) // Есть ли данный компонент в составе другого компонента
+                {// есть
+                    context.Relations.Remove(includeComponent.Where(x => x.ParentId == context.Relations.Where(c => c.ChildId == deleteComponent.Id).FirstOrDefault().ParentId).FirstOrDefault());
+                }
+                else
+                {// нет
+                    var deleteChildRelations = context.Relations.Where(x => x.ParentId == deleteComponent.Id).ToList();
+
+                    foreach (var item in deleteChildRelations)
+                    {
+                        DeleteComponents(context.Component.Where(x => x.Id == item.ChildId).FirstOrDefault().Name);
+                    }
+
+                    var childRelations = context.Relations.Where(x => x.ChildId == deleteComponent.Id).FirstOrDefault();
+
+                    if (childRelations != null)
+                        context.Relations.Remove(childRelations);
+                    context.Component.Remove(deleteComponent);
+                }
             }
             else
-            {// нет
-                var deleteChildRelations = context.Relations.Where(x => x.ParentId == deleteComponent.Id).ToList();
-
-                foreach (var item in deleteChildRelations)
-                {
-                    DeleteComponents(context.Component.Where(x => x.Id == item.ChildId).FirstOrDefault().Name);
-                }
-
-                var childRelations = context.Relations.Where(x => x.ChildId == deleteComponent.Id).FirstOrDefault();
-
-                if (childRelations != null)
-                    context.Relations.Remove(childRelations);
-                context.Component.Remove(deleteComponent);
-            }
+                MessageBox.Show("Необходимо нажать ПКМ на удаляемом компоненте", "Ошибка", MessageBoxButtons.OK);
         }
 
         public TreeNode[] CreateChildTreeNode(int id) // Метод добавления дочерних узлов id - id родительского компонента
@@ -146,13 +152,43 @@ namespace DbFirstTest
 
         private void CreateReport_ToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            var procResult = context.DataForReport(context.Component.Where(x => x.Name == SelectedNode).FirstOrDefault().Id).ToList();
 
+            if (procResult.Count != 0)
+            {
+                var application = new Word.Application();
+                Word.Document document = application.Documents.Add();
 
+                foreach (var component in procResult)
+                {
+                    Word.Paragraph tableParagraph = document.Paragraphs.Add();
+                    Word.Range tableRange = tableParagraph.Range;
+                    Word.Table componentTable = document.Tables.Add(tableRange, procResult.Count(), 2);
+                    componentTable.Borders.InsideLineStyle = componentTable.Borders.OutsideLineStyle = Word.WdLineStyle.wdLineStyleSingle;
+                    componentTable.Range.Cells.VerticalAlignment = Word.WdCellVerticalAlignment.wdCellAlignVerticalCenter;
 
-            var application = new Word.Application();
+                    Word.Range cellRange;
 
-            Word.Document document = application.Documents.Add();
+                    for (int i = 0; i < procResult.Count(); i++)
+                    {
+                        var currentComponent = procResult[i];
 
+                        cellRange = componentTable.Cell(i + 1, 1).Range;
+                        cellRange.Text = currentComponent.Name;
+
+                        cellRange = componentTable.Cell(i + 1, 2).Range;
+                        cellRange.Text = currentComponent.QuantityOfComponents.ToString();
+                    }
+
+                    if (component != procResult.LastOrDefault())
+                        document.Words.Last.InsertBreak(Word.WdBreakType.wdPageBreak);
+                }
+
+                application.Visible = true;
+
+            }
+            else
+                MessageBox.Show("Для данного компонента нельзя составить отчёт о сводном составе", "Ошибка", MessageBoxButtons.OK);
 
         }
     }

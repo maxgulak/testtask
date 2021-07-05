@@ -33,6 +33,9 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Function Name="DataForReport" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="id" Type="int" Mode="In" />
+        </Function>
         <EntityContainer Name="Хранилище ModelContainer">
           <EntitySet Name="Component" EntityType="Self.Component" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Relations" EntityType="Self.Relations" Schema="dbo" store:Type="Tables" />
@@ -45,13 +48,24 @@
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="Model" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="ModelContext" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Component" EntityType="Model.Component" />
+          <EntitySet Name="Relations" EntityType="Model.Relations" />
+          <AssociationSet Name="FK_Relations_Component" Association="Model.FK_Relations_Component">
+            <End Role="Component" EntitySet="Component" />
+            <End Role="Relations" EntitySet="Relations" />
+          </AssociationSet>
+          <FunctionImport Name="DataForReport" ReturnType="Collection(Model.DataForReport_Result)">
+          <Parameter Name="id" Mode="In" Type="Int32" />
+          </FunctionImport>
+        </EntityContainer>
         <EntityType Name="Component">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="String" MaxLength="25" FixedLength="true" Unicode="true" Nullable="false" />
-          <NavigationProperty Name="Relations" Relationship="Self.FK_Relations_Component" FromRole="Component" ToRole="Relations" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="25" FixedLength="true" Unicode="true" />
+          <NavigationProperty Name="Relations" Relationship="Model.FK_Relations_Component" FromRole="Component" ToRole="Relations" />
         </EntityType>
         <EntityType Name="Relations">
           <Key>
@@ -61,11 +75,11 @@
           <Property Name="ChildId" Type="Int32" Nullable="false" />
           <Property Name="ParentId" Type="Int32" />
           <Property Name="QuantityOfComponents" Type="Byte" />
-          <NavigationProperty Name="Component" Relationship="Self.FK_Relations_Component" FromRole="Relations" ToRole="Component" />
+          <NavigationProperty Name="Component" Relationship="Model.FK_Relations_Component" FromRole="Relations" ToRole="Component" />
         </EntityType>
         <Association Name="FK_Relations_Component">
-          <End Role="Component" Type="Self.Component" Multiplicity="0..1" />
-          <End Role="Relations" Type="Self.Relations" Multiplicity="*" />
+          <End Type="Model.Component" Role="Component" Multiplicity="0..1" />
+          <End Type="Model.Relations" Role="Relations" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Component">
               <PropertyRef Name="Id" />
@@ -75,14 +89,10 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityContainer Name="ModelContext" annotation:LazyLoadingEnabled="true">
-          <EntitySet Name="Component" EntityType="Self.Component" />
-          <EntitySet Name="Relations" EntityType="Self.Relations" />
-          <AssociationSet Name="FK_Relations_Component" Association="Self.FK_Relations_Component">
-            <End Role="Component" EntitySet="Component" />
-            <End Role="Relations" EntitySet="Relations" />
-          </AssociationSet>
-        </EntityContainer>
+        <ComplexType Name="DataForReport_Result">
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="25" />
+          <Property Type="Byte" Name="QuantityOfComponents" Nullable="true" />
+        </ComplexType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -92,21 +102,29 @@
           <EntitySetMapping Name="Component">
             <EntityTypeMapping TypeName="Model.Component">
               <MappingFragment StoreEntitySet="Component">
-                <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Relations">
             <EntityTypeMapping TypeName="Model.Relations">
               <MappingFragment StoreEntitySet="Relations">
-                <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="ChildId" ColumnName="ChildId" />
-                <ScalarProperty Name="ParentId" ColumnName="ParentId" />
                 <ScalarProperty Name="QuantityOfComponents" ColumnName="QuantityOfComponents" />
+                <ScalarProperty Name="ParentId" ColumnName="ParentId" />
+                <ScalarProperty Name="ChildId" ColumnName="ChildId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="DataForReport" FunctionName="Хранилище Model.DataForReport" >
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="Model.DataForReport_Result">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="QuantityOfComponents" ColumnName="QuantityOfComponents" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

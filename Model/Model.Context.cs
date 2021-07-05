@@ -12,6 +12,8 @@ namespace DbFirstTest.Model
     using System;
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
+    using System.Data.Entity.Core.Objects;
+    using System.Linq;
     
     public partial class ModelContext : DbContext
     {
@@ -27,5 +29,14 @@ namespace DbFirstTest.Model
     
         public virtual DbSet<Component> Component { get; set; }
         public virtual DbSet<Relations> Relations { get; set; }
+    
+        public virtual ObjectResult<DataForReport_Result> DataForReport(Nullable<int> id)
+        {
+            var idParameter = id.HasValue ?
+                new ObjectParameter("id", id) :
+                new ObjectParameter("id", typeof(int));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<DataForReport_Result>("DataForReport", idParameter);
+        }
     }
 }
