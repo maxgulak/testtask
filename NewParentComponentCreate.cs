@@ -19,34 +19,43 @@ namespace DbFirstTest
         private void CreateNewParentComponent_button_Click(object sender, EventArgs e)
         {
             Title = nameOfNewParentComponent_textBox.Text;
-            
-            if (Title != "") // Проверка на пустой ввод 
+
+            if (Title.Length < 26)
             {
-                var querry = _context.Component.Where(x => x.Name == Title).FirstOrDefault(); // Выбор компонента с заданным именем
-                if (querry == null) // Если такого компонента не существует
+                if (String.IsNullOrWhiteSpace(Title) == false) // Проверка на пустой ввод 
                 {
-                    Component component = new Component();
-                    component.Name = Title;
-                    _context.Component.Add(component);
-                    _context.SaveChanges();
+                    var querry = _context.Component.Where(x => x.Name == Title).FirstOrDefault(); // Выбор компонента с заданным именем
+                    if (querry == null) // Если такого компонента не существует
+                    {
+                        Component component = new Component();
+                        component.Name = Title;
+                        _context.Component.Add(component);
+                        _context.SaveChanges();
 
-                    Relations relations = new Relations();
-                    relations.ChildId = component.Id;
-                    _context.Relations.Add(relations);
-                    _context.SaveChanges();
+                        Relations relations = new Relations();
+                        relations.ChildId = component.Id;
+                        _context.Relations.Add(relations);
+                        _context.SaveChanges();
 
-                    Close();
+                        Close();
+                    }
+                    else // Если такой компоненент существует
+                    {
+                        MessageBox.Show("Запись с таким именем уже существует", "Ошибка", MessageBoxButtons.OK);
+                        Title = null;
+                    }
                 }
-                else // Если такой компоненент существует
+                else
                 {
-                    MessageBox.Show("Запись с таким именем уже существует", "Ошибка", MessageBoxButtons.OK);
+                    MessageBox.Show("Необходимо ввести наименование", "Ошибка", MessageBoxButtons.OK);
                     Title = null;
                 }
             }
             else
-                MessageBox.Show("Необходимо ввести наименование", "Ошибка", MessageBoxButtons.OK);
-
-            nameOfNewParentComponent_textBox.Text = null;
+            {
+                MessageBox.Show("Максимальная длина названия - 25 символов", "Ошибка", MessageBoxButtons.OK);
+                Title = null;
+            }
         }
     }
 }

@@ -17,16 +17,11 @@ namespace DbFirstTest.Model
     
     public partial class ModelContext : DbContext
     {
-        public ModelContext()
-            : base("name=ModelContext")
+        public ModelContext() : base("name=ModelContext")
         {
+
         }
-    
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
-        {
-            throw new UnintentionalCodeFirstException();
-        }
-    
+
         public virtual DbSet<Component> Component { get; set; }
         public virtual DbSet<Relations> Relations { get; set; }
     

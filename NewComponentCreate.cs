@@ -51,68 +51,72 @@ namespace DbFirstTest
         private void CreateNewComponent_button_Click(object sender, EventArgs e)
         {
             Title = nameOfNewComponent_textBox.Text;
-
-            if (Title != "")
+            if (Title.Length < 26)
             {
-                if (short.TryParse(numberOfNewComponent_textBox.Text, out short a))
+                if (String.IsNullOrWhiteSpace(Title) == false)
                 {
-                    Quantity = byte.Parse(numberOfNewComponent_textBox.Text);
+                    if (short.TryParse(numberOfNewComponent_textBox.Text, out short a) && a > 0 && a < 256)
+                    {
+                        Quantity = byte.Parse(numberOfNewComponent_textBox.Text);
 
 
-                    var querry = _context.Component.Where(x => x.Name == Title).FirstOrDefault(); // Выбор компонента с заданным именем
-                    if (querry == null) // Если компонента с таким именем нет
-                    { // Создаём новый компонент и задаём отношение
-                        Component component = new Component();
-                        component.Name = Title;
-                        _context.Component.Add(component);
+                        var querry = _context.Component.Where(x => x.Name == Title).FirstOrDefault(); // Выбор компонента с заданным именем
+                        if (querry == null) // Если компонента с таким именем нет
+                        { // Создаём новый компонент и задаём отношение
+                            Component component = new Component();
+                            component.Name = Title;
+                            _context.Component.Add(component);
 
-                        _context.SaveChanges();
+                            _context.SaveChanges();
 
-                        Relations relation = new Relations();
-                        relation.ChildId = component.Id;
-                        relation.ParentId = _context.Component.Where(x => x.Name == _node).FirstOrDefault().Id;
-                        relation.QuantityOfComponents = Quantity;
-                        _context.Relations.Add(relation);
+                            Relations relation = new Relations();
+                            relation.ChildId = component.Id;
+                            relation.ParentId = _context.Component.Where(x => x.Name == _node).FirstOrDefault().Id;
+                            relation.QuantityOfComponents = Quantity;
+                            _context.Relations.Add(relation);
 
-                        _context.SaveChanges();
-                        Close();
-                    }
-                    else // Если компонент с таким именем есть
-                    { // Задаём только отношение
-                        if (_context.Relations.Where(x => x.ParentId == querry.Id).FirstOrDefault() != null) // Проверка на существование этого комнонента
-                        {
-                            var checkId = _context.Component.Where(x => x.Name == Title).FirstOrDefault().Id; // Проверяем ссылается ли добавляемый элемент на родительский
-
-                            bool flag = false;
-
-                            flag = IsListRecursion(_context.Relations.Where(x => x.ParentId == checkId).ToList(), flag);
-
-                            if (flag == false)
+                            _context.SaveChanges();
+                            Close();
+                        }
+                        else // Если компонент с таким именем есть
+                        { // Задаём только отношение
+                            if (_context.Relations.Where(x => x.ParentId == querry.Id).FirstOrDefault() != null) // Проверка на существование этого комнонента
                             {
-                                Relations relation = new Relations();
-                                relation.ChildId = querry.Id;
-                                relation.ParentId = _context.Component.Where(x => x.Name == _node).FirstOrDefault().Id;
-                                relation.QuantityOfComponents = Quantity;
-                                _context.Relations.Add(relation);
+                                var checkId = _context.Component.Where(x => x.Name == Title).FirstOrDefault().Id; // Проверяем ссылается ли добавляемый элемент на родительский
 
-                                _context.SaveChanges();
-                                Close();
+                                bool flag = false;
+
+                                flag = IsListRecursion(_context.Relations.Where(x => x.ParentId == checkId).ToList(), flag);
+
+                                if (flag == false)
+                                {
+                                    Relations relation = new Relations();
+                                    relation.ChildId = querry.Id;
+                                    relation.ParentId = _context.Component.Where(x => x.Name == _node).FirstOrDefault().Id;
+                                    relation.QuantityOfComponents = Quantity;
+                                    _context.Relations.Add(relation);
+
+                                    _context.SaveChanges();
+                                    Close();
+                                }
+                                else
+                                    MessageBox.Show("Рекурсивное вложение компонентов не допускается", "Ошибка", MessageBoxButtons.OK);
                             }
                             else
-                                MessageBox.Show("Рекурсивное вложение компонентов не допускается", "Ошибка", MessageBoxButtons.OK);
+                                MessageBox.Show("Компонент с таким именем уже существует", "Ошибка", MessageBoxButtons.OK);
                         }
-                        else
-                            MessageBox.Show("У данного компонента уже существует вложенный компонент с таким именем", "Ошибка", MessageBoxButtons.OK);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Количество компонентов - это любое число от 1 до 255", "Ошибка", MessageBoxButtons.OK);
+                        numberOfNewComponent_textBox.Text = "";
                     }
                 }
                 else
-                    MessageBox.Show("Необходимо ввести количество компонентов", "Ошибка", MessageBoxButtons.OK);
+                    MessageBox.Show("Необходимо ввести наименование", "Ошибка", MessageBoxButtons.OK);
             }
             else
-                MessageBox.Show("Необходимо ввести наименование", "Ошибка", MessageBoxButtons.OK);
-
-            nameOfNewComponent_textBox.Text = "";
-            numberOfNewComponent_textBox.Text = "";
+                MessageBox.Show("Максимальная длина названия - 25 символов", "Ошибка", MessageBoxButtons.OK);
         }
     }
 }

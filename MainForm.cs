@@ -17,6 +17,7 @@ namespace DbFirstTest
         {
             InitializeComponent();
             context = new ModelContext();
+            context.Database.CreateIfNotExists();
         }
 
         private void treeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
